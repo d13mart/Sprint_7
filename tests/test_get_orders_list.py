@@ -1,7 +1,6 @@
 import pytest
 import allure
-import requests
-from utils.order_utils import get_orders_list, create_order, BASE_URL
+from api_client import api
 
 
 @allure.epic("API Яндекс.Самокат")
@@ -10,38 +9,21 @@ class TestGetOrdersList:
     """Тесты для ручки GET /api/v1/orders"""
 
     @allure.title("Успешное получение списка заказов")
-    def test_get_orders_list(self):
+    def test_get_orders_list(self, created_order):
         """В тело ответа возвращается список заказов."""
-        # Создаём заказ, чтобы список точно не был пустым
-        order_data = {
-            "first_name": "Тест",
-            "last_name": "Тестов",
-            "address": "ул. Тестовая, 1",
-            "metro_station": 1,
-            "phone": "+7 999 999 99 99",
-            "rent_time": 3,
-            "delivery_date": "2026-09-01",
-            "comment": "Тестовый заказ",
-            "color": ["BLACK"],
-        }
-        created = create_order(**order_data)
-        assert created is not None
-        track = created["track"]
-
-        try:
-            orders = get_orders_list()
-            assert orders is not None
-            assert isinstance(orders, list)
-            # Список может быть пагинированным, просто проверяем структуру
-            assert len(orders) >= 0
-        finally:
-            # Чистим
-            requests.put(f"{BASE_URL}/orders/cancel", params={"track": track})
+        # created_order fixture creates an order and cleans up after
+        track = created_order["track"]
+        
+        orders = api.get_orders_list()
+        assert orders is not None
+        assert isinstance(orders, list)
+        # Список может быть пагинированным, просто проверяем структуру
+        assert len(orders) >= 0
 
     @allure.title("Список заказов имеет правильную структуру")
     def test_orders_list_structure(self):
         """Каждый заказ в списке содержит обязательные поля."""
-        orders = get_orders_list()
+        orders = api.get_orders_list()
         assert orders is not None
         assert isinstance(orders, list)
 
