@@ -1,6 +1,9 @@
 import pytest
 import allure
+import requests
+from config import BASE_URL
 from api_client import api
+from constants import ERR_INSUFFICIENT_DATA_SEARCH, ERR_COURIER_NOT_FOUND
 
 
 @allure.epic("API Яндекс.Самокат")
@@ -25,14 +28,12 @@ class TestAcceptOrder:
     @allure.title("Ошибка если не передать id курьера")
     def test_accept_order_without_courier_id(self):
         """Если не передать id курьера — запрос вернёт ошибку."""
-        import requests
-        from config import BASE_URL
         resp = requests.put(
             f"{BASE_URL}/orders/accept/{self.order_id}",
             timeout=(10, 30)
         )
         assert resp.status_code == 400
-        assert "недостаточно данных" in resp.json().get("message", "").lower()
+        assert resp.json().get("message") == ERR_INSUFFICIENT_DATA_SEARCH
 
     @allure.title("Ошибка при неверном id курьера")
     def test_accept_order_with_wrong_courier_id(self):
@@ -43,8 +44,6 @@ class TestAcceptOrder:
     @allure.title("Ошибка если не передать id заказа")
     def test_accept_order_without_order_id(self):
         """Если не передать id заказа — запрос вернёт ошибку."""
-        import requests
-        from config import BASE_URL
         resp = requests.put(
             f"{BASE_URL}/orders/accept/",
             params={"courierId": self.courier_id},
